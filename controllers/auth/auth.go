@@ -19,27 +19,20 @@ type JwtClaim struct {
 	jwt.StandardClaims
 }
 
-func GenerateAccessToken(id string) (chan string, error) {
+func GenerateAccessToken(id string) (string, error) {
+	claims := *&JwtClaim{
+		ID: id,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
+			Issuer:    "JWT",
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
 
-	tokenChan := make(chan string)
-
-	go func() {
-		claims := *&JwtClaim{
-			ID: id,
-			StandardClaims: jwt.StandardClaims{
-				ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
-				Issuer:    "JWT",
-			},
-		}
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		signedToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		tokenChan <- signedToken
-		close(tokenChan)
-	}()
-	return tokenChan, nil
+	return signedToken, nil
 }
