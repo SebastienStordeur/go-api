@@ -1,0 +1,31 @@
+package database
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+func ConnectToDB() *mongo.Client {
+	mongo_uri := os.Getenv("MONGO_URI")
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongo_uri))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	defer cancel()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to mongoDB")
+	return client
+}
