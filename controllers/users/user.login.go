@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"api/controllers/auth"
 	"api/controllers/database"
 	"api/models"
 	"context"
@@ -25,27 +26,40 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	existingUser, err := userCollection.Find(ctx, bson.M{"email": userCredentials.Email})
-	if existingUser == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "This user does not exist", "err": err})
+	// Search the user in the db
+	foundUser, err := userCollection.Find(ctx, bson.M{"email": userCredentials.Email})
+	if !foundUser.Next(ctx) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	var existingUserStruct models.User
-	err = existingUser.Decode(&existingUserStruct)
+
+	// Decode the user
+	var decodedUser models.User
+	err = foundUser.Decode(&decodedUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// compare psw
-	passwordsMatching := comparePasswords(userCredentials.Password, existingUserStruct.Password)
-	if passwordsMatching {
-		// The passwords match, so the user is logged in
-		c.JSON(http.StatusOK, gin.H{"message": "User logged in successfully"})
-	} else {
-		// The passwords do not match, so an error is returned
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+	passwordsMatching := comparePasswords(userCredentials.Password, decodedUser.Password)
+	if !passwordsMatching {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Failed to login"})
+		return
 	}
+
+	// Convert the user ID to a slice of bytes
+	userId := decodedUser.ID.Hex()
+
+	// Generate an access token
+	tokenChan, err := auth.GenerateAccessToken(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	token := <-tokenChan
+	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
 func comparePasswords(password string, hash string) bool {
