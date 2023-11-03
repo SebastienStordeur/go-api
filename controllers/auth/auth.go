@@ -36,3 +36,16 @@ func GenerateAccessToken(id string) (string, error) {
 
 	return signedToken, nil
 }
+
+func DecodeJwtToken(tokenString string, verificationKey []byte) (*jwt.MapClaims, error) {
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return verificationKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	println(token)
+
+	return &claims, nil
+}

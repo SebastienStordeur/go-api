@@ -1,7 +1,9 @@
 package main
 
 import (
-	controllers "api/controllers/users"
+	auth "api/middlewares"
+	"api/routes"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,8 +11,13 @@ import (
 func main() {
 	router := gin.Default()
 
-	router.POST("/user", controllers.Signup)
-	router.POST("/user/login", controllers.Login)
+	routes.UserRoutes(router)
+
+	router.Use(auth.AuthMiddleware())
+	router.GET("/private", func(c *gin.Context) {
+		userID := c.MustGet("userID").(string)
+		c.JSON(http.StatusOK, gin.H{"message": "This is a private route", "userID": userID})
+	})
 
 	router.Run("localhost:8080")
 }

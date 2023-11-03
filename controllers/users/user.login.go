@@ -27,21 +27,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Search the user in the db
-	/* 	foundUser, err := userCollection.Find(ctx, bson.M{"email": userCredentials.Email})
-	   	if !foundUser.Next(ctx) {
-	   		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-	   		return
-	   	}
-
-	   	// Decode the user
-	   	var decodedUser models.User
-	   	err = foundUser.Decode(&decodedUser)
-	   	if err != nil {
-	   		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	   		return
-	   	} */
-
 	// Find user in the db
 	user, err := findUserByEmail(ctx, userCollection, userCredentials.Email)
 	if err != nil {
@@ -56,17 +41,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Convert the user ID to a slice of bytes
-	userId := user.ID.Hex()
-
 	// Generate an access token
-	/* 	tokenChan, err := auth.GenerateAccessToken(userId)
-	   	if err != nil {
-	   		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	   		return
-	   	}
-
-	   	token := <-tokenChan */
+	userId := user.ID.Hex()
 	tokenChan := make(chan string)
 	go func() {
 		token, err := auth.GenerateAccessToken(userId)
@@ -74,7 +50,6 @@ func Login(c *gin.Context) {
 			tokenChan <- ""
 			return
 		}
-
 		tokenChan <- token
 	}()
 	token := <-tokenChan
