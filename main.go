@@ -27,6 +27,7 @@ func main() {
 		c.JSON(200, gin.H{"message": "Endpoint working"})
 	})
 	router.POST("/user", controllers.Signup)
+	/* router.POST("/user/login", controllers.Login) */
 
 	router.Run("localhost:8080")
 }
