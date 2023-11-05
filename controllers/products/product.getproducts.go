@@ -30,13 +30,16 @@ func GetProducts(c *gin.Context) {
 	}
 	/* defer cancel() */
 
-	var results models.Product
+	var results []models.Product
 	for products.Next(context.Background()) {
-		err := products.Decode(&results)
+		var result models.Product
+		err := products.Decode(&result)
 		if err != nil {
 			log.Fatal(err)
 		}
+		results = append(results, result)
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{"data": results})
+	return
 }

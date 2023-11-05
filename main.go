@@ -1,6 +1,7 @@
 package main
 
 import (
+	middlewares "api/middlewares/cors"
 	"api/routes"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 
 func main() {
 	router := gin.Default()
+	router.Use(middlewares.CORSMiddleware())
 
 	routes.UserRoutes(router)
 	routes.ProductRoutes(router)
