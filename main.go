@@ -12,6 +12,11 @@ func main() {
 	router := gin.Default()
 	router.Use(middlewares.CORSMiddleware())
 
+	router.GET("/", func (c *gin.Context)  {
+		c.JSON(http.StatusAccepted, gin.H{"message": "ALL WORKING"})
+		
+	})
+
 	routes.UserRoutes(router)
 	routes.ProductRoutes(router)
 
