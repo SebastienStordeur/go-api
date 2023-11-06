@@ -40,6 +40,6 @@ func GetProducts(c *gin.Context) {
 		results = append(results, result)
 	}
 
-	c.JSON(http.StatusAccepted, gin.H{"data": results})
+	c.JSON(http.StatusOK, gin.H{"data": results})
 	return
 }
