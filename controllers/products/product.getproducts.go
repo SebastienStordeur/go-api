@@ -6,6 +6,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -21,14 +22,14 @@ func GetProducts(c *gin.Context) {
 	var DB = database.ConnectToDB()
 	var collection = GetCollection(DB, "Products")
 
-	/* ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) */
+	 _, cancel := context.WithTimeout(context.Background(), 10*time.Second) 
 
 	products, err := collection.Find(context.Background(), bson.D{})
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
-	/* defer cancel() */
+	defer cancel() 
 
 	var results []models.Product
 	for products.Next(context.Background()) {
@@ -37,6 +38,7 @@ func GetProducts(c *gin.Context) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		results = append(results, result)
 	}
 
